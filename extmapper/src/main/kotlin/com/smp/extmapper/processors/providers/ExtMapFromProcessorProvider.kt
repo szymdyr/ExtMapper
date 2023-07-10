@@ -6,7 +6,6 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.smp.extmapper.processors.ExtMapFromProcessor
 
 class ExtMapFromProcessorProvider : SymbolProcessorProvider {
-    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return ExtMapFromProcessor(environment)
-    }
+    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
+        ExtMapFromProcessor(environment)
 }

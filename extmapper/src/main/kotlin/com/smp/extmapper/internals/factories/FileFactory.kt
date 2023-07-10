@@ -23,7 +23,7 @@ internal class FileFactoryImpl : FileFactory {
         codeGenerator.createNewFile(
             Dependencies(
                 aggregating = false,
-                sources = annotatedClass.containingFile?.let { arrayOf(it) } ?: arrayOf(),
+                sources = annotatedClass.containingFile?.let { arrayOf(it) } ?: emptyArray()
             ),
             fileName = fileSpec.name,
             packageName = fileSpec.packageName

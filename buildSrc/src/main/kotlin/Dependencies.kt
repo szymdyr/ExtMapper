@@ -8,7 +8,7 @@ object Plugins {
 
 object GradlePlugins {
     const val ANDROID_GRADLE_PLUGIN = "com.android.tools.build:gradle:8.0.2"
-    const val KOTLIN_GRADLE_PLUGIN = "org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20"
+    const val KOTLIN_GRADLE_PLUGIN = "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0"
 }
 
 object DefaultConfig {
@@ -34,7 +34,7 @@ object Dependencies {
     }
 
     object Google {
-        const val KSP_VERSION = "1.8.20-1.0.10"
+        const val KSP_VERSION = "1.9.0-1.0.11"
         const val KSP = "com.google.devtools.ksp:symbol-processing-api:$KSP_VERSION"
         const val MATERIAL_DESIGN = "com.google.android.material:material:1.9.0"
     }
