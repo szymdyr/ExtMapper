@@ -13,10 +13,14 @@ internal class ExtMapFromSymbolAnnotatedValidatorImpl: ExtMapFromSymbolAnnotated
     private val annotationValueProvider: ExtMapFromArgumentsValueProvider =
         ExtMapFromArgumentsValueProviderImpl()
 
+    private val visibilityModifierValueValidator: VisibilityModifierValueValidator =
+        VisibilityModifierValueValidatorImpl()
+
     override fun isValid(symbol: KSAnnotated): Boolean =
         symbol is KSClassDeclaration &&
                 symbol.validate() &&
-                symbol.hasValidFromParameter()
+                symbol.hasValidFromParameter() &&
+                symbol.hasValidVisibilityModifier()
 
     private fun KSClassDeclaration.hasValidFromParameter(): Boolean {
         val fromClass = annotationValueProvider.getFromClassValue(this)
@@ -25,4 +29,9 @@ internal class ExtMapFromSymbolAnnotatedValidatorImpl: ExtMapFromSymbolAnnotated
                 (fromClass.classKind == ClassKind.CLASS ||
                         fromClass.classKind == ClassKind.ENUM_CLASS)
     }
+
+    private fun KSClassDeclaration.hasValidVisibilityModifier(): Boolean =
+        visibilityModifierValueValidator.isValid(
+            annotationValueProvider.getVisibilityModifierValue(this)
+        )
 }

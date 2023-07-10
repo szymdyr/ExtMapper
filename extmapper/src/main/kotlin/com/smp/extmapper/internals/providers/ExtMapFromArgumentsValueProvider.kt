@@ -8,6 +8,8 @@ import com.smp.extmapper.internals.extensions.getArgument
 
 internal interface ExtMapFromArgumentsValueProvider {
     fun getFromClassValue(symbol: KSAnnotated): KSClassDeclaration
+
+    fun getVisibilityModifierValue(symbol: KSAnnotated): Int
 }
 
 internal class ExtMapFromArgumentsValueProviderImpl: ExtMapFromArgumentsValueProvider {
@@ -18,4 +20,9 @@ internal class ExtMapFromArgumentsValueProviderImpl: ExtMapFromArgumentsValuePro
             .getArgument(ExtMapFrom::fromClass.name)
             .run { value as KSType }
             .run { declaration as KSClassDeclaration }
+
+    override fun getVisibilityModifierValue(symbol: KSAnnotated): Int =
+        annotationProvider.provide<ExtMapFrom>(symbol)
+            .getArgument(ExtMapFrom::visibilityModifier.name)
+            .run { value as Int }
 }
