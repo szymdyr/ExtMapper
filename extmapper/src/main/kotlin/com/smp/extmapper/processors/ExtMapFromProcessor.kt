@@ -5,29 +5,30 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSVisitorVoid
+import com.google.devtools.ksp.validate
 import com.smp.extmapper.annotations.ExtMapFrom
-import com.smp.extmapper.internals.usecases.ProcessMapFromUseCase
-import com.smp.extmapper.internals.usecases.ProcessMapFromUseCaseImpl
+import com.smp.extmapper.internals.validators.ExtMapFromSymbolAnnotatedValidatorImpl
+import com.smp.extmapper.internals.validators.SymbolValidator
+import com.smp.extmapper.internals.visitors.ExtMapFromVisitor
 
 class ExtMapFromProcessor(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
 
-    private val processMapFromUseCase: ProcessMapFromUseCase = ProcessMapFromUseCaseImpl()
+    private val validator: SymbolValidator = ExtMapFromSymbolAnnotatedValidatorImpl()
+    private val visitor: KSVisitorVoid =
+        ExtMapFromVisitor(environment.codeGenerator)
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val annotatedClasses = resolver.getSymbolsWithAnnotation(ExtMapFrom::class.java.name)
+        val annotationName = ExtMapFrom::class.qualifiedName ?: return emptyList()
+        environment.logger
+        val annotatedClasses = resolver.getSymbolsWithAnnotation(annotationName)
             .filterIsInstance<KSClassDeclaration>()
+            .toList()
 
-        if (!annotatedClasses.iterator().hasNext()) return emptyList()
+        annotatedClasses
+            .filter { validator.isValid(it) }
+            .onEach { it.accept(visitor, Unit) }
 
-        annotatedClasses.forEach {
-            processMapFromUseCase(
-                ProcessMapFromUseCase.Config(
-                    annotatedClass = it,
-                    codeGenerator = environment.codeGenerator
-                )
-            )
-        }
-
-        return emptyList()
+        return annotatedClasses.filterNot { it.validate() }
     }
 }

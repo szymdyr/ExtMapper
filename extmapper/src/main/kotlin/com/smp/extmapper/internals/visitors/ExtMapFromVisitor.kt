@@ -1,42 +1,37 @@
-package com.smp.extmapper.internals.usecases
+package com.smp.extmapper.internals.visitors
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSType
-import com.smp.extmapper.annotations.ExtMapFrom
+import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.smp.extmapper.internals.MapDirection
 import com.smp.extmapper.internals.factories.FileFactory
 import com.smp.extmapper.internals.factories.FileFactoryImpl
 import com.smp.extmapper.internals.factories.FileNameFactory
 import com.smp.extmapper.internals.factories.FileNameFactoryImpl
-import com.smp.extmapper.internals.providers.AnnotationProvider
-import com.smp.extmapper.internals.providers.AnnotationProviderImpl
-import com.smp.extmapper.internals.providers.provide
+import com.smp.extmapper.internals.providers.ExtMapFromArgumentsValueProvider
+import com.smp.extmapper.internals.providers.ExtMapFromArgumentsValueProviderImpl
 import com.smp.extmapper.internals.writers.FileWriter
 import com.smp.extmapper.internals.writers.FileWriterImpl
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 
-internal interface ProcessMapFromUseCase : UseCase<ProcessMapFromUseCase.Config> {
-    data class Config(
-        val annotatedClass: KSClassDeclaration,
-        val codeGenerator: CodeGenerator
-    )
-}
+internal class ExtMapFromVisitor(
+    private val codeGenerator: CodeGenerator
+): KSVisitorVoid() {
 
-internal class ProcessMapFromUseCaseImpl : ProcessMapFromUseCase {
     private val fileFactory: FileFactory = FileFactoryImpl()
     private val fileWriter: FileWriter = FileWriterImpl()
     private val fileNameFactory: FileNameFactory = FileNameFactoryImpl()
-    private val annotationProvider: AnnotationProvider = AnnotationProviderImpl()
+    private val argumentsValueProvider: ExtMapFromArgumentsValueProvider =
+        ExtMapFromArgumentsValueProviderImpl()
 
-    override operator fun invoke(param: ProcessMapFromUseCase.Config) {
-        val fileName = fileNameFactory.create(param.annotatedClass, MapDirection.FROM)
-        val funSpec = createFunSpec(param.annotatedClass)
+    override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
+        val fileName = fileNameFactory.create(classDeclaration, MapDirection.FROM)
+        val funSpec = createFunSpec(classDeclaration)
 
-        val fileSpec = createFileSpec(param.annotatedClass, funSpec, fileName)
-        val outputFile = fileFactory.create(param.codeGenerator, fileSpec, param.annotatedClass)
+        val fileSpec = createFileSpec(classDeclaration, funSpec, fileName)
+        val outputFile = fileFactory.create(codeGenerator, fileSpec, classDeclaration)
         fileWriter.write(outputFile, fileSpec)
     }
 
@@ -50,10 +45,7 @@ internal class ProcessMapFromUseCaseImpl : ProcessMapFromUseCase {
                 .toString()
         )
             .receiver(
-                annotationProvider.provide<ExtMapFrom>(annotatedClass)
-                    .arguments
-                    .first { it.name?.asString() == ExtMapFrom::fromClass.name }
-                    .run { value as KSType }
+                argumentsValueProvider.getFromClassValue(annotatedClass)
                     .toClassName()
             )
             .returns(annotatedClass.toClassName())
