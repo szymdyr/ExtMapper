@@ -1,6 +1,7 @@
 plugins {
-    id (Plugins.ANDROID_APPLICATION)
-    id (Plugins.KOTLIN_ANDROID)
+    id(Plugins.ANDROID_APPLICATION)
+    id(Plugins.KOTLIN_ANDROID)
+    id(Plugins.KSP) version Dependencies.Google.KSP_VERSION
 }
 
 android {
@@ -36,8 +37,16 @@ android {
 }
 
 dependencies {
+    implementation(project(":extmapper"))
+    ksp(project(":extmapper"))
 
     implementation(Dependencies.Android.CORE_KTX)
     implementation(Dependencies.Android.APPCOMPAT)
     implementation(Dependencies.Google.MATERIAL_DESIGN)
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }

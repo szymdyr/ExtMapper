@@ -3,6 +3,7 @@ object Plugins {
     const val KOTLIN_ANDROID = "org.jetbrains.kotlin.android"
     const val KOTLIN_JVM = "org.jetbrains.kotlin.jvm"
     const val JAVA_LIBRARY = "java-library"
+    const val KSP = "com.google.devtools.ksp"
 }
 
 object GradlePlugins {
@@ -33,7 +34,8 @@ object Dependencies {
     }
 
     object Google {
-        const val KSP = "com.google.devtools.ksp:symbol-processing-api:1.8.20-1.0.10"
+        const val KSP_VERSION = "1.8.20-1.0.10"
+        const val KSP = "com.google.devtools.ksp:symbol-processing-api:$KSP_VERSION"
         const val MATERIAL_DESIGN = "com.google.android.material:material:1.9.0"
     }
 
