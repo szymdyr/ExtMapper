@@ -8,8 +8,11 @@ import com.smp.extmapper.internals.factories.FileFactory
 import com.smp.extmapper.internals.factories.FileFactoryImpl
 import com.smp.extmapper.internals.factories.FileNameFactory
 import com.smp.extmapper.internals.factories.FileNameFactoryImpl
+import com.smp.extmapper.internals.factories.VisibilityModifiersFactory
+import com.smp.extmapper.internals.factories.VisibilityModifiersFactoryImpl
 import com.smp.extmapper.internals.providers.ExtMapFromArgumentsValueProvider
 import com.smp.extmapper.internals.providers.ExtMapFromArgumentsValueProviderImpl
+import com.smp.extmapper.internals.toVisibilityModifier
 import com.smp.extmapper.internals.writers.FileWriter
 import com.smp.extmapper.internals.writers.FileWriterImpl
 import com.squareup.kotlinpoet.FileSpec
@@ -18,13 +21,16 @@ import com.squareup.kotlinpoet.ksp.toClassName
 
 internal class ExtMapFromVisitor(
     private val codeGenerator: CodeGenerator
-): KSVisitorVoid() {
+) : KSVisitorVoid() {
 
     private val fileFactory: FileFactory = FileFactoryImpl()
     private val fileWriter: FileWriter = FileWriterImpl()
     private val fileNameFactory: FileNameFactory = FileNameFactoryImpl()
     private val argumentsValueProvider: ExtMapFromArgumentsValueProvider =
         ExtMapFromArgumentsValueProviderImpl()
+
+    private val visibilityModifiersFactory: VisibilityModifiersFactory =
+        VisibilityModifiersFactoryImpl()
 
     override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
         val fileName = fileNameFactory.create(classDeclaration, MapDirection.FROM)
@@ -44,6 +50,7 @@ internal class ExtMapFromVisitor(
                 .append(annotatedClass.simpleName.asString())
                 .toString()
         )
+            .addVisibilityModifier(annotatedClass)
             .receiver(
                 argumentsValueProvider.getFromClassValue(annotatedClass)
                     .toClassName()
@@ -60,6 +67,16 @@ internal class ExtMapFromVisitor(
                 .forEach {
                     addStatement("\t${it.simpleName.asString()} = ${it.simpleName.asString()},")
                 }
+        }
+
+    private fun FunSpec.Builder.addVisibilityModifier(annotatedClass: KSClassDeclaration): FunSpec.Builder =
+        apply {
+            val visibilityModifier = argumentsValueProvider.getVisibilityModifierValue(annotatedClass)
+                .toVisibilityModifier()
+
+            addModifiers(
+                visibilityModifiersFactory.create(visibilityModifier)
+            )
         }
 
     private fun createFileSpec(
