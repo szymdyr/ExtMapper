@@ -38,7 +38,7 @@ android {
 
 dependencies {
     implementation(project(":extmapper"))
-    ksp(project(":extmapper"))
+    ksp(project(":extmapper-processor"))
 
     implementation(Dependencies.Android.CORE_KTX)
     implementation(Dependencies.Android.APPCOMPAT)

@@ -8,6 +8,8 @@ import com.smp.extmapper.internals.factories.FileFactory
 import com.smp.extmapper.internals.factories.FileFactoryImpl
 import com.smp.extmapper.internals.factories.FileNameFactory
 import com.smp.extmapper.internals.factories.FileNameFactoryImpl
+import com.smp.extmapper.internals.factories.PropertyNameFactory
+import com.smp.extmapper.internals.factories.PropertyNameFactoryImpl
 import com.smp.extmapper.internals.factories.VisibilityModifiersFactory
 import com.smp.extmapper.internals.factories.VisibilityModifiersFactoryImpl
 import com.smp.extmapper.internals.providers.ExtMapFromArgumentsValueProvider
@@ -32,9 +34,12 @@ internal class ExtMapFromVisitor(
     private val visibilityModifiersFactory: VisibilityModifiersFactory =
         VisibilityModifiersFactoryImpl()
 
+    private val propertyNameFactory: PropertyNameFactory = PropertyNameFactoryImpl()
+
     override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
         val fileName = fileNameFactory.create(classDeclaration, MapDirection.FROM)
-        val funSpec = createFunSpec(classDeclaration)
+        val fromClass = argumentsValueProvider.getFromClassValue(classDeclaration)
+        val funSpec = createFunSpec(classDeclaration, fromClass)
 
         val fileSpec = createFileSpec(classDeclaration, funSpec, fileName)
         val outputFile = fileFactory.create(codeGenerator, fileSpec, classDeclaration)
@@ -42,7 +47,8 @@ internal class ExtMapFromVisitor(
     }
 
     private fun createFunSpec(
-        annotatedClass: KSClassDeclaration
+        annotatedClass: KSClassDeclaration,
+        fromClass: KSClassDeclaration
     ): FunSpec =
         FunSpec.builder(
             StringBuilder()
@@ -51,28 +57,29 @@ internal class ExtMapFromVisitor(
                 .toString()
         )
             .addVisibilityModifier(annotatedClass)
-            .receiver(
-                argumentsValueProvider.getFromClassValue(annotatedClass)
-                    .toClassName()
-            )
+            .receiver(fromClass.toClassName())
             .returns(annotatedClass.toClassName())
             .addStatement("return «${annotatedClass.toClassName().simpleName}(")
-            .addAllFields(annotatedClass)
+            .addAllFields(annotatedClass, fromClass)
             .addStatement(")")
             .build()
 
-    private fun FunSpec.Builder.addAllFields(annotatedClass: KSClassDeclaration): FunSpec.Builder =
+    private fun FunSpec.Builder.addAllFields(
+        annotatedClass: KSClassDeclaration,
+        fromClass: KSClassDeclaration
+    ): FunSpec.Builder =
         apply {
             annotatedClass.getAllProperties()
                 .forEach {
-                    addStatement("\t${it.simpleName.asString()} = ${it.simpleName.asString()},")
+                    addStatement("\t${it.simpleName.asString()} = ${propertyNameFactory.create(it, fromClass)},")
                 }
         }
 
     private fun FunSpec.Builder.addVisibilityModifier(annotatedClass: KSClassDeclaration): FunSpec.Builder =
         apply {
-            val visibilityModifier = argumentsValueProvider.getVisibilityModifierValue(annotatedClass)
-                .toVisibilityModifier()
+            val visibilityModifier =
+                argumentsValueProvider.getVisibilityModifierValue(annotatedClass)
+                    .toVisibilityModifier()
 
             addModifiers(
                 visibilityModifiersFactory.create(visibilityModifier)

@@ -7,4 +7,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "ExtMapper"
 include(":app")
+include(":extmapper-processor")
 include(":extmapper")
