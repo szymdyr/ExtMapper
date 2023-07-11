@@ -12,7 +12,7 @@ import com.smp.extmapper.internals.validators.ExtMapFromSymbolAnnotatedValidator
 import com.smp.extmapper.internals.validators.SymbolValidator
 import com.smp.extmapper.internals.visitors.ExtMapFromVisitor
 
-class ExtMapFromProcessor(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
+internal class ExtMapFromProcessor(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
 
     private val validator: SymbolValidator = ExtMapFromSymbolAnnotatedValidatorImpl()
     private val visitor: KSVisitorVoid =
